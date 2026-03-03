@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/start-dev.js",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/start-dev.js start",
     "lint": "eslint",
     "seed": "npx tsx prisma/seed.ts",
     "seed:questions": "npx tsx prisma/seed-questions.ts"
@@ -34,6 +34,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
