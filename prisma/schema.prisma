@@ -1,0 +1,242 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  STUDENT
+}
+
+enum QuestionType {
+  INTEREST
+  APTITUDE
+  PERSONALITY
+  LEARNING_STYLE
+  VALUES
+}
+
+enum AssessmentType {
+  CLUSTER
+  BRANCH
+}
+
+enum AssessmentStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+model User {
+  id            String          @id @default(cuid())
+  email         String          @unique
+  password      String
+  name          String
+  slug          String?         @unique // Public URL slug e.g. sachin-x7k2
+  role          Role            @default(STUDENT)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  profile       StudentProfile?
+  assessments   Assessment[]
+  chatSessions  ChatSession[]
+}
+
+model StudentProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classLevel      Int      // 6-12
+  school          String?
+  city            String?
+  state           String?
+  selfClaimedCareer String? // The career student thinks they want
+  onboardingComplete Boolean @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model CareerCluster {
+  id          String         @id @default(cuid())
+  name        String         @unique
+  description String?        @db.Text
+  icon        String?        // Icon identifier
+  color       String?        // Hex color code
+  sortOrder   Int            @default(0)
+  isActive    Boolean        @default(true)
+  // PDF report metadata — editable by admin
+  salary      String?        // e.g. "₹6–25 LPA (Entry) | ₹25–80 LPA (Senior)"
+  colleges    String?        @db.Text // Top colleges
+  education   String?        // Education path
+  growth      String?        // Market growth indicator
+  examKey     String?        // Key entrance exams
+  branches    CareerBranch[]
+  questionWeights QuestionOptionWeight[]
+  assessmentResults AssessmentResult[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model CareerBranch {
+  id          String        @id @default(cuid())
+  name        String
+  description String?       @db.Text
+  clusterId   String
+  cluster     CareerCluster @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  sortOrder   Int           @default(0)
+  isActive    Boolean       @default(true)
+  eligibility String?       @db.Text
+  competition String?       // Low, Medium, High
+  effort      String?       // Low, Medium, High
+  questionWeights QuestionOptionWeight[]
+  branchResults BranchResult[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([name, clusterId])
+}
+
+model Question {
+  id          String           @id @default(cuid())
+  text        String           @db.Text
+  type        QuestionType
+  classMin    Int              @default(6)
+  classMax    Int              @default(12)
+  forAssessment AssessmentType @default(CLUSTER)
+  clusterId   String?          // If BRANCH type, which cluster is this for
+  sortOrder   Int              @default(0)
+  isActive    Boolean          @default(true)
+  options     QuestionOption[]
+  answers     AssessmentAnswer[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model QuestionOption {
+  id         String                 @id @default(cuid())
+  questionId String
+  question   Question               @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  text       String                 @db.Text
+  sortOrder  Int                    @default(0)
+  weights    QuestionOptionWeight[]
+  answers    AssessmentAnswer[]
+  createdAt  DateTime               @default(now())
+}
+
+model QuestionOptionWeight {
+  id         String         @id @default(cuid())
+  optionId   String
+  option     QuestionOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  clusterId  String?
+  cluster    CareerCluster? @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  branchId   String?
+  branch     CareerBranch?  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  weight     Float          @default(0)
+  createdAt  DateTime       @default(now())
+
+  @@index([optionId])
+  @@index([clusterId])
+  @@index([branchId])
+}
+
+model Assessment {
+  id         String             @id @default(cuid())
+  userId     String
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       AssessmentType
+  status     AssessmentStatus   @default(IN_PROGRESS)
+  answers    AssessmentAnswer[]
+  results    AssessmentResult[]
+  branchResults BranchResult[]
+  recommendation Recommendation?
+  startedAt  DateTime           @default(now())
+  completedAt DateTime?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  @@index([userId])
+}
+
+model AssessmentAnswer {
+  id           String         @id @default(cuid())
+  assessmentId String
+  assessment   Assessment     @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  questionId   String
+  question     Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  optionId     String
+  option       QuestionOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime       @default(now())
+
+  @@unique([assessmentId, questionId])
+  @@index([assessmentId])
+}
+
+model AssessmentResult {
+  id           String        @id @default(cuid())
+  assessmentId String
+  assessment   Assessment    @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  clusterId    String
+  cluster      CareerCluster @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  score        Float
+  percentage   Float
+  rank         Int           @default(0)
+  createdAt    DateTime      @default(now())
+
+  @@unique([assessmentId, clusterId])
+  @@index([assessmentId])
+}
+
+model BranchResult {
+  id           String       @id @default(cuid())
+  assessmentId String
+  assessment   Assessment   @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  branchId     String
+  branch       CareerBranch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  score        Float
+  percentage   Float
+  rank         Int          @default(0)
+  createdAt    DateTime     @default(now())
+
+  @@unique([assessmentId, branchId])
+  @@index([assessmentId])
+}
+
+model Recommendation {
+  id              String     @id @default(cuid())
+  assessmentId    String     @unique
+  assessment      Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  bestFitBranch   String
+  backup1Branch   String?
+  backup2Branch   String?
+  reasoning       String?    @db.Text
+  riskFactors     String?    @db.Text
+  realityCheck    String?    @db.Text
+  claimValidation String?    // MATCHED, MISMATCHED, NO_CLAIM
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model ChatSession {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String        @default("New Chat")
+  messages  ChatMessage[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([userId])
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      String      // "user" or "assistant"
+  content   String      @db.LongText
+  createdAt DateTime    @default(now())
+
+  @@index([sessionId])
+}
