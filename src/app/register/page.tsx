@@ -172,7 +172,7 @@ export default function RegisterPage() {
               <CheckCircleIcon style={{ width: 18, height: 18, color: "#93c5fd", flexShrink: 0, marginTop: 2 }} />
               <div style={{ fontSize: "0.88rem", color: "#93c5fd", lineHeight: 1.5 }}>
                 <strong>Your test results are ready!</strong> They will be automatically saved to this account once you register.
-                {guestSession.clusters && Array.isArray(guestSession.clusters) && guestSession.clusters.length > 0 && (
+                {Array.isArray(guestSession.clusters) && (guestSession.clusters as Array<{name: string}>).length > 0 && (
                   <span> Top cluster: <strong>{(guestSession.clusters as Array<{name: string}>)[0].name}</strong>.</span>
                 )}
               </div>

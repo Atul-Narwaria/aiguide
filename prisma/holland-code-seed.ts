@@ -8,17 +8,9 @@
  */
 
 import { PrismaClient } from "@prisma/client";
+import type { HollandQuestion } from "./holland-code-questions/interest-questions";
 
 const prisma = new PrismaClient();
-
-// Holland Code Question Interface
-interface HollandQuestion {
-  id: number;
-  text: string;
-  type: "R" | "I" | "A" | "S" | "E" | "C";
-  classMin: number;
-  classMax: number;
-}
 
 // Group A: Class 8th - 10th (30 Questions) - Interests and Hobbies
 const GROUP_A_QUESTIONS: HollandQuestion[] = [
@@ -349,7 +341,8 @@ async function seedHollandCodeQuestions() {
         forAssessment: "CLUSTER",
         sortOrder: q.id,
         isActive: true,
-        options: [
+        options: {
+          create: [
           {
             text: "Yes, I strongly agree",
             sortOrder: 1,
@@ -390,7 +383,8 @@ async function seedHollandCodeQuestions() {
               }))
             }
           },
-        ],
+          ],
+        },
       },
     });
 

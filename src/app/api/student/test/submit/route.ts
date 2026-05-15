@@ -206,8 +206,8 @@ export async function POST(request: Request) {
 
       // Get Holland Code descriptions for the dominant codes
       const hollandResults = dominantCodes.map((code) => ({
-        code,
         ...HOLLAND_CODES[code as keyof typeof HOLLAND_CODES],
+        code,
         score: hollandScores[code as keyof typeof hollandScores],
       }));
 
