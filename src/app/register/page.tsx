@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
 import {
   SparklesIcon,
@@ -10,6 +11,7 @@ import {
   LockClosedIcon,
   UserIcon,
   ArrowRightIcon,
+  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 
 export default function RegisterPage() {
@@ -19,7 +21,24 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [guestSession, setGuestSession] = useState<Record<string, unknown> | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("aiGuide_guestSession");
+      if (raw) {
+        const data: Record<string, unknown> = JSON.parse(raw);
+        setGuestSession(data);
+        // Pre-fill name only if the guest gave a real name (not the default "User")
+        if (data.name && data.name !== "User") {
+          setName(data.name as string);
+        }
+      }
+    } catch {
+      // localStorage unavailable — ignore
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +60,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ email, password, name, guestSession }),
       });
 
       const data = await res.json();
@@ -51,7 +70,21 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push("/login?registered=true");
+      // Auto sign-in so the guest session is immediately transferred
+      const signInResult = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      });
+
+      // Clear the guest session from localStorage after successful transfer
+      try { localStorage.removeItem("aiGuide_guestSession"); } catch { /* ignore */ }
+
+      if (signInResult?.ok) {
+        router.push("/student/dashboard");
+      } else {
+        router.push("/login?registered=true");
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -122,6 +155,29 @@ export default function RegisterPage() {
           >
             Start your career discovery journey
           </p>
+
+          {guestSession && (
+            <div
+              style={{
+                background: "rgba(67,97,238,0.1)",
+                border: "1px solid rgba(67,97,238,0.3)",
+                borderRadius: 12,
+                padding: "12px 16px",
+                marginBottom: 24,
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 10,
+              }}
+            >
+              <CheckCircleIcon style={{ width: 18, height: 18, color: "#93c5fd", flexShrink: 0, marginTop: 2 }} />
+              <div style={{ fontSize: "0.88rem", color: "#93c5fd", lineHeight: 1.5 }}>
+                <strong>Your test results are ready!</strong> They will be automatically saved to this account once you register.
+                {guestSession.clusters && Array.isArray(guestSession.clusters) && guestSession.clusters.length > 0 && (
+                  <span> Top cluster: <strong>{(guestSession.clusters as Array<{name: string}>)[0].name}</strong>.</span>
+                )}
+              </div>
+            </div>
+          )}
 
           {error && (
             <div

@@ -147,11 +147,44 @@ export async function POST(request: Request) {
     const recommendation =
       branchAssessment?.recommendation || clusterAssessment?.recommendation;
 
+    // Determine language level instructions based on class
+    const classLevel = profile?.classLevel ?? 0;
+    let languageInstruction: string;
+    if (classLevel <= 8 && classLevel >= 1) {
+      languageInstruction = `LANGUAGE LEVEL — Class ${classLevel} (Junior):
+- Use very simple, easy English that a young student can understand
+- Avoid difficult words and technical jargon completely
+- Explain every career term in plain words (e.g., "Engineers build things like bridges and apps")
+- Keep sentences short and clear
+- Use lots of friendly emojis to keep it fun
+- Focus on "what does this person do every day" style explanations
+- Mention 1-2 subjects they should study well right now
+- Do NOT mention entrance exam details yet — too early; just say "study hard in school"`;
+    } else if (classLevel <= 10) {
+      languageInstruction = `LANGUAGE LEVEL — Class ${classLevel} (Middle/Secondary):
+- Use clear, moderately easy English — some career terms are okay if explained briefly
+- Student is starting to think seriously about streams (Science/Commerce/Arts after Class 10)
+- Focus heavily on stream selection advice and what each stream leads to
+- Mention key entrance exams by name (JEE, NEET, CLAT, NDA, etc.) but explain them simply
+- Provide 2-3 actionable steps they can take right now in Class ${classLevel}
+- Encourage subject choices that match their interests
+- Keep tone friendly and motivating`;
+    } else {
+      languageInstruction = `LANGUAGE LEVEL — Class ${classLevel} (Senior Secondary):
+- Use confident, mature English — student is ready for detailed, professional advice
+- Give specific entrance exam preparation strategies (JEE, NEET, UPSC, CLAT, CAT, NDA, etc.)
+- Mention specific college names, cut-offs, and admission processes
+- Discuss career roadmaps: degree → specialization → job roles → growth path
+- Include salary ranges and job market outlook where relevant
+- Provide actionable monthly/yearly study plans
+- Be direct and thorough — student needs comprehensive guidance for life decisions`;
+    }
+
     const systemPrompt = `You are an AI Career Counselor for Indian students on the aiGuide platform. Your role is to provide personalized, helpful, and encouraging career guidance.
 
 STUDENT CONTEXT:
 - Name: ${user?.name || "Student"}
-- Class: ${profile?.classLevel || "Unknown"}
+- Class: ${classLevel || "Unknown"}
 - School: ${profile?.school || "Not specified"}
 - City/State: ${profile?.city || ""}, ${profile?.state || ""}
 - Self-Claimed Career Interest: ${profile?.selfClaimedCareer || "Not specified"}
@@ -160,17 +193,18 @@ STUDENT CONTEXT:
 - Best Fit Recommendation: ${recommendation?.bestFitBranch || "Not available yet"}
 - Backup Options: ${recommendation?.backup1Branch || "N/A"}, ${recommendation?.backup2Branch || "N/A"}
 
+${languageInstruction}
+
 GUIDELINES:
 1. Be warm, encouraging and supportive — remember these are young students (class 6-12)
 2. Give India-specific advice — mention Indian exams (JEE, NEET, UPSC, CLAT, NDA, etc.), colleges (IITs, AIIMS, NITs, IIMs, NLUs), and career paths
 3. Use the student's assessment results to provide personalized advice
 4. If they ask about a career that doesn't match their assessment, gently explain the mismatch but encourage them to explore
-5. Provide actionable steps appropriate for their class level
+5. Provide actionable steps appropriate for their class level — strictly follow the LANGUAGE LEVEL instructions above
 6. Keep responses concise but informative (2-3 paragraphs max)
-7. Use simple language — avoid jargon
-8. Add relevant emojis to make the chat feel friendly
-9. If asked non-career questions, politely redirect to career guidance
-10. Always be honest about competition levels and effort required
+7. Add relevant emojis to make the chat feel friendly
+8. If asked non-career questions, politely redirect to career guidance
+9. Always be honest about competition levels and effort required
 
 FORMATTING:
 - Use **bold** for key terms and career names

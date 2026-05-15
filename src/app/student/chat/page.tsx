@@ -945,13 +945,17 @@ function ChatPageInner() {
             ))}
           </AnimatePresence>
 
-          {/* Typing Indicator */}
-          {loading && !messages[messages.length - 1]?.content && (
+          {/* Typing / Thinking Indicator — shows whenever AI is processing */}
+          {loading &&
+            (messages[messages.length - 1]?.role === "user" ||
+              !messages[messages.length - 1]?.content) && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              style={{ display: "flex", gap: 12, alignItems: "center" }}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              style={{ display: "flex", gap: 12, alignItems: "flex-start" }}
             >
+              {/* AI Avatar */}
               <div
                 style={{
                   width: 34,
@@ -962,10 +966,15 @@ function ChatPageInner() {
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
+                  marginTop: 2,
+                  boxShadow: "0 0 0 0 rgba(230,57,70,0.4)",
+                  animation: "pulse-ring 1.5s ease-out infinite",
                 }}
               >
                 <SparklesIcon style={{ width: 18, height: 18, color: "white" }} />
               </div>
+
+              {/* Bubble */}
               <div
                 style={{
                   padding: "12px 18px",
@@ -973,22 +982,38 @@ function ChatPageInner() {
                   background: "var(--bg-secondary)",
                   border: "1px solid var(--glass-border)",
                   display: "flex",
+                  flexDirection: "column",
                   gap: 6,
                 }}
               >
-                {[0, 1, 2].map((i) => (
-                  <motion.div
-                    key={i}
-                    animate={{ opacity: [0.3, 1, 0.3] }}
-                    transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: "50%",
-                      background: "var(--accent-red)",
-                    }}
-                  />
-                ))}
+                {/* Dot animation */}
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  {[0, 1, 2].map((i) => (
+                    <motion.div
+                      key={i}
+                      animate={{ y: [0, -5, 0], opacity: [0.4, 1, 0.4] }}
+                      transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15 }}
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        background: "var(--accent-red)",
+                      }}
+                    />
+                  ))}
+                </div>
+                {/* Label */}
+                <motion.span
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1.8, repeat: Infinity }}
+                  style={{
+                    fontSize: "0.72rem",
+                    color: "var(--text-muted)",
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  AI is thinking…
+                </motion.span>
               </div>
             </motion.div>
           )}

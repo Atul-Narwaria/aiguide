@@ -18,7 +18,7 @@ function generateSlug(name: string): string {
 
 export async function POST(request: Request) {
   try {
-    const { email, password, name, role } = await request.json();
+    const { email, password, name, role, guestSession } = await request.json();
 
     if (!email || !password || !name) {
       return NextResponse.json(
@@ -57,6 +57,62 @@ export async function POST(request: Request) {
         role: role === "ADMIN" ? "ADMIN" : "STUDENT",
       },
     });
+
+    // ── Import guest session if provided ──────────────────────────────────
+    if (guestSession && typeof guestSession === "object") {
+      const gs = guestSession as {
+        classLevel?: number;
+        topCodes?: Array<{ code: string; score: number; percentage: number }>;
+        clusters?: Array<{ name: string; score: number; percentage: number }>;
+        completedAt?: string;
+      };
+
+      const classLevel =
+        typeof gs.classLevel === "number" && gs.classLevel > 0
+          ? gs.classLevel
+          : 10;
+
+      // Create student profile with onboarding marked complete
+      await prisma.studentProfile.create({
+        data: {
+          userId: user.id,
+          classLevel,
+          onboardingComplete: true,
+        },
+      });
+
+      // If the guest completed the assessment, save the results
+      if (Array.isArray(gs.clusters) && gs.clusters.length > 0) {
+        const assessment = await prisma.assessment.create({
+          data: {
+            userId: user.id,
+            type: "CLUSTER",
+            status: "COMPLETED",
+            completedAt: gs.completedAt ? new Date(gs.completedAt) : new Date(),
+          },
+        });
+
+        for (let rank = 0; rank < gs.clusters.length; rank++) {
+          const c = gs.clusters[rank];
+          // Fuzzy match: find cluster whose name contains the guest cluster name
+          const cluster = await prisma.careerCluster.findFirst({
+            where: { name: { contains: c.name.split("/")[0].trim() } },
+          });
+          if (cluster) {
+            await prisma.assessmentResult.create({
+              data: {
+                assessmentId: assessment.id,
+                clusterId: cluster.id,
+                score: c.score,
+                percentage: c.percentage,
+                rank: rank + 1,
+              },
+            });
+          }
+        }
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────
 
     return NextResponse.json(
       { id: user.id, email: user.email, name: user.name, role: user.role, slug: user.slug },

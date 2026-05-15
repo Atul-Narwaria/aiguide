@@ -57,10 +57,12 @@ export default function TestPage() {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const answerArray = Object.entries(answers).map(([questionId, optionId]) => ({
-        questionId,
-        optionId,
-      }));
+      const answerArray = Object.entries(answers).map(
+        ([questionId, optionId]) => ({
+          questionId,
+          optionId,
+        }),
+      );
 
       const res = await fetch("/api/student/test/submit", {
         method: "POST",
@@ -80,7 +82,14 @@ export default function TestPage() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "60vh",
+        }}
+      >
         <p style={{ color: "var(--text-muted)" }}>Loading questions...</p>
       </div>
     );
@@ -88,10 +97,21 @@ export default function TestPage() {
 
   if (questions.length === 0) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-        <div className="glass-card" style={{ textAlign: "center", padding: 60, maxWidth: 500 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "60vh",
+        }}
+      >
+        <div
+          className="glass-card"
+          style={{ textAlign: "center", padding: 60, maxWidth: 500 }}
+        >
           <p style={{ color: "var(--text-muted)", marginBottom: 16 }}>
-            No questions available yet. Please ask your admin to add assessment questions.
+            No questions available yet. Please ask your admin to add assessment
+            questions.
           </p>
         </div>
       </div>
@@ -99,7 +119,10 @@ export default function TestPage() {
   }
 
   const currentQuestion = questions[currentIdx];
-  const progress = ((Object.keys(answers).length / questions.length) * 100).toFixed(0);
+  const progress = (
+    (Object.keys(answers).length / questions.length) *
+    100
+  ).toFixed(0);
   const allAnswered = Object.keys(answers).length === questions.length;
 
   return (
@@ -107,23 +130,53 @@ export default function TestPage() {
       {/* Header */}
       <div style={{ marginBottom: 32 }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 800, marginBottom: 8 }}>
-          Interest <span className="gradient-text">Discovery Test</span>
+          Career <span className="gradient-text">Interest Assessment</span>
         </h1>
 
         {/* Progress Bar */}
-        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 8 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+            marginBottom: 8,
+          }}
+        >
           <div className="progress-bar" style={{ flex: 1 }}>
-            <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
+            <div
+              className="progress-bar-fill"
+              style={{ width: `${progress}%` }}
+            />
           </div>
-          <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 600 }}>
+          <span
+            style={{
+              fontSize: "0.85rem",
+              color: "var(--text-secondary)",
+              fontWeight: 600,
+            }}
+          >
             {progress}%
           </span>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
             Question {currentIdx + 1} of {questions.length}
           </span>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text-muted)", fontSize: "0.8rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              color: "var(--text-muted)",
+              fontSize: "0.8rem",
+            }}
+          >
             <ClockIcon style={{ width: 14, height: 14 }} />
             {Object.keys(answers).length} answered
           </div>
@@ -147,7 +200,14 @@ export default function TestPage() {
             </span>
           </div>
 
-          <h2 style={{ fontSize: "1.2rem", fontWeight: 600, lineHeight: 1.6, marginBottom: 32 }}>
+          <h2
+            style={{
+              fontSize: "1.2rem",
+              fontWeight: 600,
+              lineHeight: 1.6,
+              marginBottom: 32,
+            }}
+          >
             {currentQuestion.text}
           </h2>
 
@@ -172,7 +232,10 @@ export default function TestPage() {
                     alignItems: "center",
                     justifyContent: "center",
                     flexShrink: 0,
-                    background: answers[currentQuestion.id] === option.id ? "var(--accent-red)" : "transparent",
+                    background:
+                      answers[currentQuestion.id] === option.id
+                        ? "var(--accent-red)"
+                        : "transparent",
                     color: "white",
                     fontWeight: 700,
                     fontSize: "0.75rem",
@@ -184,7 +247,9 @@ export default function TestPage() {
                     String.fromCharCode(65 + i)
                   )}
                 </div>
-                <span style={{ fontSize: "0.95rem", lineHeight: 1.5 }}>{option.text}</span>
+                <span style={{ fontSize: "0.95rem", lineHeight: 1.5 }}>
+                  {option.text}
+                </span>
               </motion.div>
             ))}
           </div>
@@ -192,7 +257,13 @@ export default function TestPage() {
       </AnimatePresence>
 
       {/* Navigation */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <button
           className="btn-secondary"
           onClick={() => setCurrentIdx(Math.max(0, currentIdx - 1))}
@@ -215,8 +286,8 @@ export default function TestPage() {
                 background: answers[q.id]
                   ? "var(--accent-red)"
                   : i === currentIdx
-                  ? "rgba(230, 57, 70, 0.4)"
-                  : "rgba(255,255,255,0.1)",
+                    ? "rgba(230, 57, 70, 0.4)"
+                    : "rgba(255,255,255,0.1)",
                 cursor: "pointer",
                 transition: "all 0.3s ease",
               }}
@@ -238,7 +309,9 @@ export default function TestPage() {
             onClick={handleSubmit}
             disabled={!allAnswered || submitting}
           >
-            {submitting ? "Submitting..." : (
+            {submitting ? (
+              "Submitting..."
+            ) : (
               <>
                 Submit Test
                 <CheckCircleIcon style={{ width: 18, height: 18 }} />

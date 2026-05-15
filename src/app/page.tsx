@@ -44,12 +44,13 @@ export default function LandingPage() {
             aiGuide
           </span>
         </div>
-        <div style={{ display: "flex", gap: "12px" }}>
-          <Link href="/login" className="btn-secondary" style={{ padding: "10px 24px" }}>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <Link href="/login" style={{ padding: "10px 16px", color: "var(--text-muted)", textDecoration: "none", fontSize: "0.9rem" }}>
             Login
           </Link>
-          <Link href="/register" className="btn-primary" style={{ padding: "10px 24px" }}>
-            Get Started
+          <Link href="/assessment" className="btn-primary" style={{ padding: "10px 24px" }}>
+            <RocketLaunchIcon style={{ width: 18, height: 18 }} />
+            Start Free Test
           </Link>
         </div>
       </header>
@@ -124,21 +125,21 @@ export default function LandingPage() {
             style={{
               fontSize: "1.15rem",
               color: "var(--text-secondary)",
-              maxWidth: 600,
+              maxWidth: 640,
               margin: "0 auto 40px",
               lineHeight: 1.7,
             }}
           >
-            Stop guessing your future. Our scientific assessment platform analyzes
-            your interests, aptitude, and personality to recommend the career path
-            that truly fits you.
+            Take the career interest test right now — no account needed.
+            Create one later only if you want to save results, use AI counseling,
+            or access the full student dashboard.
           </p>
           <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/register" className="btn-primary" style={{ padding: "16px 40px", fontSize: "1.05rem" }}>
+            <Link href="/assessment" className="btn-primary" style={{ padding: "16px 44px", fontSize: "1.1rem" }}>
               <RocketLaunchIcon style={{ width: 20, height: 20 }} />
-              Start Free Assessment
+              Start Free Test — No Sign Up
             </Link>
-            <Link href="#how-it-works" className="btn-secondary" style={{ padding: "16px 40px", fontSize: "1.05rem" }}>
+            <Link href="#how-it-works" className="btn-secondary" style={{ padding: "16px 32px", fontSize: "1.05rem" }}>
               Learn More
             </Link>
           </div>
@@ -376,9 +377,9 @@ export default function LandingPage() {
             Join thousands of students who discovered their dream career through
             our AI-powered assessment platform.
           </p>
-          <Link href="/register" className="btn-primary" style={{ padding: "16px 48px", fontSize: "1.05rem" }}>
+            <Link href="/assessment" className="btn-primary" style={{ padding: "16px 48px", fontSize: "1.05rem" }}>
             <RocketLaunchIcon style={{ width: 20, height: 20 }} />
-            Start Your Journey Now
+            Try the Free Preview
           </Link>
         </motion.div>
       </section>

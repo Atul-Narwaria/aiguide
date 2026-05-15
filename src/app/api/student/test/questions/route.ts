@@ -14,10 +14,13 @@ export async function GET() {
     });
 
     if (!profile) {
-      return NextResponse.json({ error: "Complete onboarding first" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Complete onboarding first" },
+        { status: 400 },
+      );
     }
 
-    // Check for existing in-progress cluster assessment
+    // Check for existing in-progress Holland Code assessment (interest-based CLUSTER assessment)
     let assessment = await prisma.assessment.findFirst({
       where: {
         userId: session.user.id,
@@ -35,13 +38,27 @@ export async function GET() {
       });
     }
 
-    // Get ALL questions for student's class level
+    // Get questions based on class level
+    // For Class 8-10: 30 questions
+    // For Class 11-12: 50 questions
+    // For College+: 75 questions
+    let classLevel = profile.classLevel;
+    let targetCount = 30;
+
+    if (classLevel >= 13) {
+      targetCount = 75;
+    } else if (classLevel >= 11) {
+      targetCount = 50;
+    }
+
+    // Get Holland Code questions for the student's class level
     const allQuestions = await prisma.question.findMany({
       where: {
         isActive: true,
         forAssessment: "CLUSTER",
-        classMin: { lte: profile.classLevel },
-        classMax: { gte: profile.classLevel },
+        classMin: { lte: classLevel },
+        classMax: { gte: classLevel },
+        hollandCode: { not: null },
       },
       include: {
         options: {
@@ -51,15 +68,7 @@ export async function GET() {
       },
     });
 
-    // Randomly select ~40 questions, balanced across types
-    const TOTAL_QUESTIONS = 40;
-    const typeGroups: Record<string, typeof allQuestions> = {};
-    for (const q of allQuestions) {
-      if (!typeGroups[q.type]) typeGroups[q.type] = [];
-      typeGroups[q.type].push(q);
-    }
-
-    // Shuffle each group
+    // Shuffle and select questions
     const shuffle = <T>(arr: T[]): T[] => {
       const a = [...arr];
       for (let i = a.length - 1; i > 0; i--) {
@@ -69,35 +78,23 @@ export async function GET() {
       return a;
     };
 
-    const types = Object.keys(typeGroups);
-    const perType = Math.floor(TOTAL_QUESTIONS / types.length);
-    let selected: typeof allQuestions = [];
-
-    // Pick balanced number from each type
-    for (const type of types) {
-      const shuffled = shuffle(typeGroups[type]);
-      selected.push(...shuffled.slice(0, perType));
-    }
-
-    // Fill remaining with random picks from any type
-    const remaining = allQuestions.filter((q) => !selected.includes(q));
-    const extra = shuffle(remaining).slice(0, TOTAL_QUESTIONS - selected.length);
-    selected.push(...extra);
-
-    // Final shuffle
-    selected = shuffle(selected);
+    const shuffled = shuffle(allQuestions);
+    const selected = shuffled.slice(0, Math.min(targetCount, shuffled.length));
 
     return NextResponse.json({
       assessmentId: assessment.id,
       questions: selected.map((q) => ({
         id: q.id,
         text: q.text,
-        type: q.type,
+        type: q.hollandCode || q.type,
         options: q.options,
       })),
     });
   } catch (error) {
     console.error("Test questions error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

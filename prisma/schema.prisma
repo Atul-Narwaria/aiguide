@@ -18,6 +18,12 @@ enum QuestionType {
   PERSONALITY
   LEARNING_STYLE
   VALUES
+  REALISTIC
+  INVESTIGATIVE
+  ARTISTIC
+  SOCIAL
+  ENTERPRISING
+  CONVENTIONAL
 }
 
 enum AssessmentType {
@@ -102,6 +108,7 @@ model Question {
   id          String           @id @default(cuid())
   text        String           @db.Text
   type        QuestionType
+  hollandCode String?          // Holland Code type (R, I, A, S, E, C) for interest assessments
   classMin    Int              @default(6)
   classMax    Int              @default(12)
   forAssessment AssessmentType @default(CLUSTER)

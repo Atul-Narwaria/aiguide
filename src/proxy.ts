@@ -6,8 +6,12 @@ export default async function middleware(request: NextRequest) {
   const session = await auth();
   const { pathname } = request.nextUrl;
 
-  // Public routes
-  const publicRoutes = ["/", "/login", "/register"];
+  if (pathname === "/") {
+    return NextResponse.next();
+  }
+
+  // Public auth routes
+  const publicRoutes = ["/login", "/register"];
   if (publicRoutes.includes(pathname)) {
     if (session) {
       const role = (session.user as Record<string, unknown>).role;
